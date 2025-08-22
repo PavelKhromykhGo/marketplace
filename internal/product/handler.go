@@ -58,6 +58,18 @@ func parsePaging(c *gin.Context) (offset, limit int, filter string) {
 	return offset, limit, ""
 }
 
+// listProducts godoc
+// @Summary List products
+// @Description Get a list of products with pagination
+// @Tags products
+// @Param offset query int false "Offset" default(0)
+// @Param limit query int false "Limit" default(10)
+// @Param filter query string false "Name filter"
+// @Success 200 {array} Product
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /products [get]
+
 func (h *Handler) listProducts(c *gin.Context) {
 	offset, limit, filter := parsePaging(c)
 
@@ -69,6 +81,17 @@ func (h *Handler) listProducts(c *gin.Context) {
 
 	c.JSON(http.StatusOK, products)
 }
+
+// getProduct godoc
+// @Summary Get a product by ID
+// @Description Get a single product by its ID
+// @Tags products
+// @Param id path int true "Product ID"
+// @Success 200 {object} Product
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 404 {object} gin.H{"error": "Not Found"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /products/{id} [get]
 
 func (h *Handler) getProduct(c *gin.Context) {
 	id, ok := parseID(c)
@@ -89,6 +112,18 @@ func (h *Handler) getProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+// createProduct godoc
+// @Summary Create a new product
+// @Description Create a new product with the provided details
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param product body CreateProductReq true "Product payload"
+// @Success 201 {object} gin.H{"id": int64}
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 409 {object} gin.H{"error": "Conflict"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /products [post]
 func (h *Handler) createProduct(c *gin.Context) {
 	var req CreateProductReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -110,6 +145,20 @@ func (h *Handler) createProduct(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
+
+// updateProduct godoc
+// @Summary Update an existing product
+// @Description Update the details of an existing product by its ID
+// @Tags products
+// @Accept json
+// @Param id path int true "Product ID"
+// @Param product body UpdateProductReq true "Product payload"
+// @Success 204 "No Content"
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 404 {object} gin.H{"error": "Not Found"}
+// @Failure 409 {object} gin.H{"error": "Conflict"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /products/{id} [put]
 func (h *Handler) updateProduct(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {
@@ -136,6 +185,17 @@ func (h *Handler) updateProduct(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+// deleteProduct godoc
+// @Summary Delete a product by ID
+// @Description Delete a single product by its ID
+// @Tags products
+// @Param id path int true "Product ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 404 {object} gin.H{"error": "Not Found"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /products/{id} [delete]
 func (h *Handler) deleteProduct(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {
@@ -150,6 +210,17 @@ func (h *Handler) deleteProduct(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// listCategories godoc
+// @Summary List categories
+// @Description Get a list of categories with pagination
+// @Tags categories
+// @Param offset query int false "Offset" default(0)
+// @Param limit query int false "Limit" default(10)
+// @Param filter query string false "Name filter"
+// @Success 200 {array} Category
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /categories [get]
 func (h *Handler) listCategories(c *gin.Context) {
 	offset, limit, filter := parsePaging(c)
 
@@ -162,6 +233,16 @@ func (h *Handler) listCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, categories)
 }
 
+// getCategory godoc
+// @Summary Get a category by ID
+// @Description Get a single category by its ID
+// @Tags categories
+// @Param id path int true "Category ID"
+// @Success 200 {object} Category
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 404 {object} gin.H{"error": "Not Found"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /categories/{id} [get]
 func (h *Handler) getCategory(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {
@@ -181,6 +262,18 @@ func (h *Handler) getCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, category)
 }
 
+// createCategory godoc
+// @Summary Create a new category
+// @Description Create a new category with the provided details
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param category body CreateCategoryReq true "Category payload"
+// @Success 201 {object} gin.H{"id": int64}
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 409 {object} gin.H{"error": "Conflict"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /categories [post]
 func (h *Handler) createCategory(c *gin.Context) {
 	var req CreateCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -198,6 +291,19 @@ func (h *Handler) createCategory(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
+// updateCategory godoc
+// @Summary Update an existing category
+// @Description Update the details of an existing category by its ID
+// @Tags categories
+// @Accept json
+// @Param id path int true "Category ID"
+// @Param category body UpdateCategoryReq true "Category payload"
+// @Success 204 "No Content"
+// @Failure 400 {object} gin.H{"error": "Bad Request"}
+// @Failure 404 {object} gin.H{"error": "Not Found"}
+// @Failure 409 {object} gin.H{"error": "Conflict"}
+// @Failure 500 {object} gin.H{"error": "Internal Server Error"}
+// @Router /categories/{id} [put]
 func (h *Handler) updateCategory(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {

@@ -1,3 +1,8 @@
+// @title Marketplace API
+// @version 1.0
+// @description This is a sample server for a marketplace application.
+// @BasePath /
+
 package main
 
 import (
@@ -9,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -29,11 +36,13 @@ func main() {
 
 	r := gin.New()
 
-	h.RegisterRoutes(r)
-
 	r.Use(gin.Recovery())
 	r.Use(middleware.ErrorLogger())
 	r.Use(middleware.ErrorHandler())
+
+	h.RegisterRoutes(r)
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Fatal(r.Run(":8080"))
 }
