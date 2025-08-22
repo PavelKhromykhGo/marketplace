@@ -31,8 +31,9 @@ func main() {
 
 	h.RegisterRoutes(r)
 
-	r.Use(middleware.ErrorLogger())
 	r.Use(gin.Recovery())
+	r.Use(middleware.ErrorLogger())
+	r.Use(middleware.ErrorHandler())
 
 	log.Fatal(r.Run(":8080"))
 }

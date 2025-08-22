@@ -10,7 +10,12 @@ type Service interface {
 	CreateProduct(ctx context.Context, p *Product) (int64, error)
 	UpdateProduct(ctx context.Context, p *Product) error
 	DeleteProduct(ctx context.Context, id int64) error
-	GetCategories(ctx context.Context) ([]*Category, error)
+
+	CreateCategory(ctx context.Context, c *Category) (int64, error)
+	GetCategory(ctx context.Context, id int64) (*Category, error)
+	ListCategories(ctx context.Context, offset, limit int, filter string) ([]*Category, error)
+	UpdateCategory(ctx context.Context, c *Category) error
+	DeleteCategory(ctx context.Context, id int64) error
 }
 
 type productService struct {
@@ -41,6 +46,22 @@ func (s *productService) DeleteProduct(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *productService) GetCategories(ctx context.Context) ([]*Category, error) {
-	return s.repo.GetCategories(ctx)
+func (s *productService) CreateCategory(ctx context.Context, c *Category) (int64, error) {
+	return s.repo.CreateCategory(ctx, c)
+}
+
+func (s *productService) GetCategory(ctx context.Context, id int64) (*Category, error) {
+	return s.repo.GetCategory(ctx, id)
+}
+
+func (s *productService) ListCategories(ctx context.Context, offset, limit int, filter string) ([]*Category, error) {
+	return s.repo.ListCategories(ctx, offset, limit, filter)
+}
+
+func (s *productService) UpdateCategory(ctx context.Context, c *Category) error {
+	return s.repo.UpdateCategory(ctx, c)
+}
+
+func (s *productService) DeleteCategory(ctx context.Context, id int64) error {
+	return s.repo.DeleteCategory(ctx, id)
 }

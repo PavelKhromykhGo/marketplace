@@ -93,9 +93,47 @@ func TestGetProduct(t *testing.T) {
 	t.Run("не найден", func(t *testing.T) {
 		fakeRepo.On("GetByID", ctx, int64(99999)).Return(nil, errors.New("не найдено"))
 
-		product, err := svc.GetProduct(ctx, 2)
+		product, err := svc.GetProduct(ctx, 99999)
 		assert.Error(t, err)
 		assert.Nil(t, product)
+
+		fakeRepo.AssertExpectations(t)
+	})
+}
+
+func TestService_CreateProduct(t *testing.T) {
+
+	t.Run("успешно", func(t *testing.T) {
+		ctx := context.Background()
+		fakeRepo := new(mockRepo)
+		svc := NewService(fakeRepo)
+
+		newProduct := &Product{Name: "NewProduct", Price: 1500}
+		expextedID := int64(42)
+
+		fakeRepo.On("Create", ctx, newProduct).Return(expextedID, nil)
+
+		id, err := svc.CreateProduct(ctx, newProduct)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expextedID, id)
+
+		fakeRepo.AssertExpectations(t)
+	})
+
+	t.Run("ошибка создания", func(t *testing.T) {
+		ctx := context.Background()
+		fakeRepo := new(mockRepo)
+		svc := NewService(fakeRepo)
+
+		newProduct := &Product{Name: "NewProduct", Price: 1500}
+
+		fakeRepo.On("Create", ctx, newProduct).Return(int64(0), errors.New("ошибка"))
+
+		id, err := svc.CreateProduct(ctx, newProduct)
+
+		assert.Error(t, err)
+		assert.Equal(t, int64(0), id)
 
 		fakeRepo.AssertExpectations(t)
 	})

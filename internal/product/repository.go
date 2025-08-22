@@ -8,5 +8,10 @@ type Repository interface {
 	List(ctx context.Context, offset, limit int, filter string) ([]*Product, error)
 	Update(ctx context.Context, p *Product) error
 	Delete(ctx context.Context, id int64) error
-	GetCategories(ctx context.Context) ([]*Category, error)
+
+	CreateCategory(ctx context.Context, c *Category) (int64, error)
+	GetCategory(ctx context.Context, id int64) (*Category, error)
+	ListCategories(ctx context.Context, offset, limit int, filter string) ([]*Category, error)
+	UpdateCategory(ctx context.Context, c *Category) error
+	DeleteCategory(ctx context.Context, id int64) error
 }
