@@ -7,8 +7,9 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
-	"fmt"
+	"flag"
 	"log"
 	"marketplace/internal/product"
 	"marketplace/internal/repository/postgres"
@@ -30,6 +31,8 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var embedMigrations embed.FS
+
 func env(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -37,40 +40,30 @@ func env(key, fallback string) string {
 	return fallback
 }
 
-func migrationsDir() string {
-	if dir := os.Getenv("MIGRATIONS_DIR"); dir != "" {
-		return dir
-	}
-	execPath, err := os.Executable()
-	fmt.Println("execPath:", execPath)
-	if err != nil {
-		return "./migrations"
-	}
-	realPath, err := filepath.EvalSymlinks(execPath)
-	fmt.Println("realPath:", realPath)
-	if err != nil {
-		return "./migrations"
-	}
-	dir := filepath.Dir(realPath)
-	return filepath.Join(dir, "migrations")
-
-}
-
 func runMigrations(db *sqlx.DB, dir string) error {
-	if err := goose.SetDialect("postgres"); err != nil {
-		return err
+	// мигрируем из файловой системы
+	if abs, err := filepath.Abs(dir); err == nil {
+		if st, err := os.Stat(abs); err == nil && st.IsDir() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			log.Printf("Running migrations from %s", abs)
+			return goose.UpContext(ctx, db.DB, abs)
+		}
 	}
+	// мигрируем из embed.FS
+	goose.SetBaseFS(embedMigrations)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	fmt.Println("Running migrations...", dir)
-	if err := goose.UpContext(ctx, db.DB, dir); err != nil {
-		return err
-	}
-	return nil
+	log.Printf("Running migrations from embedded FS")
+	return goose.UpContext(ctx, db.DB, "migrations")
 }
 
 func main() {
+	migrationsPathFlag := flag.String("migrations", env("MIGRATIOINS_DIR", "./migrations"), "path to migrations directory")
+	flag.Parse()
+
 	dsn := env("DATABASE_URL", "host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable")
+
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -80,8 +73,10 @@ func main() {
 			log.Printf("Failed to close database connection: %v", err)
 		}
 	}()
-
-	if err = runMigrations(db, migrationsDir()); err != nil {
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Fatalf("Failed to set goose dialect: %v", err)
+	}
+	if err = runMigrations(db, *migrationsPathFlag); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 

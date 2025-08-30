@@ -1,5 +1,5 @@
 MODULE := $(shell go list -m)
-MAIN_PKG := ./cmd/marketplace
+MAIN_PKG := ./cmd/api/main.go
 MIGRATIONS_DIR := ./migrations
 
 DATABASE_URL ?= host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable
