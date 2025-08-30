@@ -1,0 +1,348 @@
+basePath: /
+definitions:
+  product.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  product.CreateCategoryReq:
+    properties:
+      name:
+        description: |-
+          Category name
+          required: true
+          min: 2
+          max: 128
+        maxLength: 128
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  product.CreateProductReq:
+    properties:
+      category_id:
+        description: |-
+          Category ID
+          required: true
+          min: 1
+        type: integer
+      description:
+        description: |-
+          Product description
+          max: 2000
+        maxLength: 2000
+        type: string
+      name:
+        description: |-
+          Product name
+          required: true
+          min: 2
+          max: 200
+        maxLength: 200
+        minLength: 2
+        type: string
+      price:
+        description: |-
+          Price in copecks
+          required: true
+          min: 1
+        type: integer
+      stock:
+        description: |-
+          Stock quantity
+          required: true
+          min: 0
+        minimum: 0
+        type: integer
+    required:
+    - category_id
+    - name
+    - price
+    - stock
+    type: object
+  product.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        type: string
+    type: object
+  product.IDResponse:
+    properties:
+      id:
+        description: ID of the created or updated entity
+        type: integer
+    type: object
+  product.UpdateCategoryReq:
+    properties:
+      name:
+        maxLength: 128
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  product.UpdateProductReq:
+    properties:
+      category_id:
+        type: integer
+      description:
+        maxLength: 2000
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - category_id
+    - name
+    - price
+    - stock
+    type: object
+info:
+  contact: {}
+  description: This is a sample server for a marketplace application.
+  title: Marketplace API
+  version: "1.0"
+paths:
+  /categories:
+    get:
+      description: Get a list of categories with pagination
+      parameters:
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Name filter
+        in: query
+        name: filter
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/product.Category'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: List categories
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      description: Create a new category with the provided details
+      parameters:
+      - description: Category payload
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/product.CreateCategoryReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/product.IDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Create a new category
+      tags:
+      - categories
+  /categories/{id}:
+    get:
+      description: Get a single category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/product.Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Get a category by ID
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Category payload
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/product.UpdateCategoryReq'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Update an existing category
+      tags:
+      - categories
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product with the provided details
+      parameters:
+      - description: Product payload
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/product.CreateProductReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/product.IDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Create a new product
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Delete a single product by its ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Delete a product by ID
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing product by its ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product payload
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/product.UpdateProductReq'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Update an existing product
+      tags:
+      - products
+swagger: "2.0"

@@ -1,0 +1,8 @@
+basePath: /
+info:
+  contact: {}
+  description: This is a sample server for a marketplace application.
+  title: Marketplace API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

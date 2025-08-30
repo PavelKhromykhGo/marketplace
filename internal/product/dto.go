@@ -54,3 +54,16 @@ type CreateCategoryReq struct {
 type UpdateCategoryReq struct {
 	Name string `json:"name" binding:"required,min=2,max=128"`
 }
+
+// IDResponse represents a response containing an ID.
+// swagger:model IDResponse
+type IDResponse struct {
+	ID int64 `json:"id"` // ID of the created or updated entity
+}
+
+// ErrorResponse represents a generic error response.
+// swagger:model ErrorResponse
+type ErrorResponse struct {
+	Error   string      `json:"error"`
+	Details interface{} `json:"details,omitempty"`
+}

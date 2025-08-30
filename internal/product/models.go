@@ -2,6 +2,7 @@ package product
 
 import "time"
 
+//swagger:model Product
 type Product struct {
 	ID          int64     `json:"id" db:"id"`
 	Name        string    `json:"name" db:"name"`
@@ -13,6 +14,7 @@ type Product struct {
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
+// swagger:model Category
 type Category struct {
 	ID   int64  `json:"id" db:"id"`
 	Name string `json:"name" db:"name"`
