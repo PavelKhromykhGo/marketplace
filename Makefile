@@ -3,16 +3,21 @@ MAIN_PKG := ./cmd/marketplace/main.go
 MIGRATIONS_DIR := ./migrations
 GOPATH ?= $(HOME)/go
 GOMODCACHE ?= $(GOPATH)/pkg/mod
+GOCACHE ?= $(HOME)/.cache/go-build
+GOBIN := $(GOPATH)/bin
 export GOPATH
 export GOMODCACHE
-export PATH := $(PATH):$(GOPATH)/bin
+export GOCACHE
+export GOBIN
+export PATH := $(PATH):$(GOBIN)
 
 
 DATABASE_URL ?= host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable
 
-SWAG := $(GOPATH)/bin/swag
+SWAG := $(GOBIN)/swag
 $(SWAG):
 	@echo "Installing swag..."
+	@mkdir -p $(dir $(SWAG))
 	go install github.com/swaggo/swag/cmd/swag@latest
 
 GOOSE := go run github.com/pressly/goose/v3/cmd/goose@latest
