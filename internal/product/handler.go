@@ -17,7 +17,12 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-
+	def := r.Group("/")
+	{
+		def.GET("", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "marketplace API running", "swagger": "/swagger/index.html"})
+		})
+	}
 	p := r.Group("/products")
 	{
 		p.GET("", h.listProducts)
