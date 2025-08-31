@@ -59,7 +59,7 @@ func runMigrations(db *sqlx.DB, dir string) error {
 }
 
 func main() {
-	migrationsPathFlag := flag.String("migrations", env("MIGRATIOINS_DIR", "./migrations"), "path to migrations directory")
+	migrationsPathFlag := flag.String("migrations", env("MIGRATIONS_DIR", "./migrations"), "path to migrations directory")
 	flag.Parse()
 
 	dsn := env("DATABASE_URL", "host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable")
