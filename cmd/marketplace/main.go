@@ -21,7 +21,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "marketplace/cmd/api/docs"
+	_ "marketplace/docs"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"

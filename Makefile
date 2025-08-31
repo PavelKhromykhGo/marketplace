@@ -1,5 +1,5 @@
 MODULE := $(shell go list -m)
-MAIN_PKG := ./cmd/api/main.go
+MAIN_PKG := ./cmd/marketplace/main.go
 MIGRATIONS_DIR := ./migrations
 
 DATABASE_URL ?= host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable
@@ -7,7 +7,7 @@ DATABASE_URL ?= host=localhost port=5432 user=postgres password=postgres dbname=
 SWAG := go run github.com/swaggo/swag/cmd/swag@latest
 GOOSE := go run github.com/pressly/goose/v3/cmd/goose@latest
 
-.PHONY: help deps tidy fmt build run test cover swag docs migrate-up migrate-down migrate-status migrate-reset migrate-create
+.PHONY: help deps tidy fmt build run test cover swag docs migrate-up migrate-down migrate-status migrate-reset migrate-create docker-build
 
 help:
 	@echo "Makefile commands:"
@@ -25,6 +25,7 @@ help:
 	@echo "  migrate-status  - Show current migration status"
 	@echo "  migrate-reset   - Reset the database and apply all migrations"
 	@echo "  migrate-create  - Create a new migration file"
+	@echo "  docker-build    - Build Docker image for the application"
 
 deps:
 	go mod download
@@ -52,6 +53,9 @@ docs:
 	@echo "Opening Swagger UI at http://localhost:8080/docs/index.html"
 	@echo "Make sure your application is running."
 	@xdg-open http://localhost:8080/docs/index.html || open http://localhost:8080/docs/index.html
+
+docker-build: swag
+	docker build -t marketplace .
 
 migrate-up:
 	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(DATABASE_URL)" up

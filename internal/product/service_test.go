@@ -13,6 +13,40 @@ type mockRepo struct {
 	mock.Mock
 }
 
+func (m *mockRepo) CreateCategory(ctx context.Context, c *Category) (int64, error) {
+	args := m.Called(ctx, c)
+	if id, ok := args.Get(0).(int64); ok {
+		return id, args.Error(1)
+	}
+	return 0, args.Error(1)
+}
+
+func (m *mockRepo) GetCategory(ctx context.Context, id int64) (*Category, error) {
+	args := m.Called(ctx, id)
+	if category, ok := args.Get(0).(*Category); ok {
+		return category, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *mockRepo) ListCategories(ctx context.Context, offset, limit int, filter string) ([]*Category, error) {
+	args := m.Called(ctx, offset, limit, filter)
+	if categories, ok := args.Get(0).([]*Category); ok {
+		return categories, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *mockRepo) UpdateCategory(ctx context.Context, c *Category) error {
+	args := m.Called(ctx, c)
+	return args.Error(0)
+}
+
+func (m *mockRepo) DeleteCategory(ctx context.Context, id int64) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *mockRepo) Create(ctx context.Context, p *Product) (int64, error) {
 	args := m.Called(ctx, p)
 	if id, ok := args.Get(0).(int64); ok {
