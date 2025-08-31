@@ -1,10 +1,20 @@
 MODULE := $(shell go list -m)
 MAIN_PKG := ./cmd/marketplace/main.go
 MIGRATIONS_DIR := ./migrations
+GOPATH ?= $(HOME)/go
+GOMODCACHE ?= $(GOPATH)/pkg/mod
+export GOPATH
+export GOMODCACHE
+export PATH := $(PATH):$(GOPATH)/bin
+
 
 DATABASE_URL ?= host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable
 
-SWAG := go run github.com/swaggo/swag/cmd/swag@latest
+SWAG := $(GOPATH)/bin/swag
+$(SWAG):
+	@echo "Installing swag..."
+	go install github.com/swaggo/swag/cmd/swag@latest
+
 GOOSE := go run github.com/pressly/goose/v3/cmd/goose@latest
 
 .PHONY: help deps tidy fmt build run test cover swag docs migrate-up migrate-down migrate-status migrate-reset migrate-create docker-build
@@ -43,10 +53,10 @@ cover:
 	go test ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated at coverage.html"
-swag:
+swag: $(SWAG)
 	$(SWAG) init \
-	--generalInfo $(MAIN_PKG)/main.go \
-	--dir $(MAIN_PKG), ./internal \
+	--generalInfo $(MAIN_PKG) \
+	--dir ./,./internal \
 	--output ./docs
 
 docs:
