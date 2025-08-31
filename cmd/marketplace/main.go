@@ -73,7 +73,7 @@ func main() {
 			log.Printf("Failed to close database connection: %v", err)
 		}
 	}()
-	if err := goose.SetDialect("postgres"); err != nil {
+	if err = goose.SetDialect("postgres"); err != nil {
 		log.Fatalf("Failed to set goose dialect: %v", err)
 	}
 	if err = runMigrations(db, *migrationsPathFlag); err != nil {

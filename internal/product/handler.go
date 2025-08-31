@@ -17,6 +17,7 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
+
 	p := r.Group("/products")
 	{
 		p.GET("", h.listProducts)

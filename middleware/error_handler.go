@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/lib/pq"
 )
 
@@ -39,11 +40,15 @@ func ErrorHandler() gin.HandlerFunc {
 				return
 			}
 		}
-		var verrs gin.H
+		var verrs validator.ValidationErrors
 		if errors.As(err, &verrs) {
+			out := make([]string, len(verrs))
+			for i, fe := range verrs {
+				out[i] = fe.Error()
+			}
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error":  "validation failed",
-				"detail": verrs,
+				"error":  "validation error",
+				"detail": out,
 			})
 			return
 		}
