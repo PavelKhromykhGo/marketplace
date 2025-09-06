@@ -3,16 +3,23 @@
 // @description This is a sample server for a marketplace application.
 // @BasePath /
 
+//securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
 package main
 
 import (
 	"context"
 	"embed"
 	"errors"
-	"flag"
 	"log"
+	"marketplace/internal/auth"
 	"marketplace/internal/product"
 	"marketplace/internal/repository/postgres"
+	"marketplace/internal/transport"
+	"marketplace/internal/user"
 	"marketplace/middleware"
 	"net/http"
 	"os"
@@ -59,10 +66,15 @@ func runMigrations(db *sqlx.DB, dir string) error {
 }
 
 func main() {
-	migrationsPathFlag := flag.String("migrations", env("MIGRATIONS_DIR", "./migrations"), "path to migrations directory")
-	flag.Parse()
+	httpAddr := env("HTTP_ADDR", ":8080")
 
 	dsn := env("DATABASE_URL", "host=localhost port=5432 user=postgres password=postgres dbname=marketplace sslmode=disable")
+
+	migDir := env("MIGRATIONS_DIR", "./migrations")
+
+	if s := env("JWT_SECRET", "your-256-bit-secret"); s != "" {
+		auth.SetSecret([]byte(s))
+	}
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
@@ -76,27 +88,43 @@ func main() {
 	if err = goose.SetDialect("postgres"); err != nil {
 		log.Fatalf("Failed to set goose dialect: %v", err)
 	}
-	if err = runMigrations(db, *migrationsPathFlag); err != nil {
+	if err = runMigrations(db, migDir); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
 	// Initialize repositories, services, and handlers here
-	repo := postgres.NewProductRepository(db)
-	svc := product.NewService(repo)
-	h := product.NewHandler(svc)
+	prodRepo := postgres.NewProductRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+
+	prodService := product.NewService(prodRepo)
+	userService := user.NewService(userRepo)
 
 	r := gin.New()
 
-	r.Use(gin.Recovery())
-	r.Use(middleware.ErrorLogger())
-	r.Use(middleware.ErrorHandler())
+	r.Use(
+		gin.Recovery(),
+		middleware.RequestID(),
+		middleware.ErrorLogger(),
+		middleware.ErrorHandler(),
+	)
 
-	h.RegisterRoutes(r)
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"ok":      true,
+			"swagger": "/swagger/index.html",
+			"health":  "/healthz",
+			"ready":   "/readyz",
+		})
+	})
+	transport.Health{DB: db}.Register(r)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	product.RegisterRoutes(r, prodService)
+	user.RegisterRoutes(r, userService)
+
 	srv := &http.Server{
-		Addr:              ":8080",
+		Addr:              httpAddr,
 		Handler:           r,
 		ReadHeaderTimeout: 10 * time.Second,
 	}

@@ -2,6 +2,7 @@ package product
 
 import (
 	"errors"
+	"marketplace/internal/auth"
 	"net/http"
 	"strconv"
 
@@ -16,29 +17,35 @@ func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	def := r.Group("/")
+func RegisterRoutes(r *gin.Engine, svc Service) {
+	h := NewHandler(svc)
+
+	public := r.Group("/products")
 	{
-		def.GET("", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "marketplace API running", "swagger": "/swagger/index.html"})
-		})
+		public.GET("", h.listProducts)
+		public.GET("/:id", h.getProduct)
 	}
-	p := r.Group("/products")
+	admin := r.Group("/products")
+	admin.Use(auth.JWTAuth(), auth.RequireRole("admin"))
 	{
-		p.GET("", h.listProducts)
-		p.GET("/:id", h.getProduct)
-		p.POST("", h.createProduct)
-		p.PUT("/:id", h.updateProduct)
-		p.DELETE("/:id", h.deleteProduct)
+		admin.POST("", h.createProduct)
+		admin.PUT("/:id", h.updateProduct)
+		admin.DELETE("/:id", h.deleteProduct)
 	}
-	cg := r.Group("/categories")
+
+	categoriesPublic := r.Group("/categories")
 	{
-		cg.GET("", h.listCategories)
-		cg.GET("/:id", h.getCategory)
-		cg.POST("", h.createCategory)
-		cg.PUT("/:id", h.updateCategory)
-		cg.DELETE("/:id", h.deleteCategory)
+		categoriesPublic.GET("", h.listCategories)
+		categoriesPublic.GET("/:id", h.getCategory)
 	}
+	categoriesAdmin := r.Group("/categories")
+	categoriesAdmin.Use(auth.JWTAuth(), auth.RequireRole("admin"))
+	{
+		categoriesAdmin.POST("", h.createCategory)
+		categoriesAdmin.PUT("/:id", h.updateCategory)
+		categoriesAdmin.DELETE("/:id", h.deleteCategory)
+	}
+
 }
 
 func parseID(c *gin.Context) (int64, bool) {
@@ -122,6 +129,7 @@ func (h *Handler) getProduct(c *gin.Context) {
 // @Summary Create a new product
 // @Description Create a new product with the provided details
 // @Tags products
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param product body CreateProductReq true "Product payload"
@@ -156,6 +164,7 @@ func (h *Handler) createProduct(c *gin.Context) {
 // @Summary Update an existing product
 // @Description Update the details of an existing product by its ID
 // @Tags products
+// @Security BearerAuth
 // @Accept json
 // @Param id path int true "Product ID"
 // @Param product body UpdateProductReq true "Product payload"
@@ -196,6 +205,7 @@ func (h *Handler) updateProduct(c *gin.Context) {
 // @Summary Delete a product by ID
 // @Description Delete a single product by its ID
 // @Tags products
+// @Security BearerAuth
 // @Param id path int true "Product ID"
 // @Success 204 "No Content"
 // @Failure 400 {object} ErrorResponse
@@ -272,6 +282,7 @@ func (h *Handler) getCategory(c *gin.Context) {
 // @Summary Create a new category
 // @Description Create a new category with the provided details
 // @Tags categories
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param category body CreateCategoryReq true "Category payload"
@@ -301,6 +312,7 @@ func (h *Handler) createCategory(c *gin.Context) {
 // @Summary Update an existing category
 // @Description Update the details of an existing category by its ID
 // @Tags categories
+// @Security BearerAuth
 // @Accept json
 // @Param id path int true "Category ID"
 // @Param category body UpdateCategoryReq true "Category payload"
@@ -329,6 +341,16 @@ func (h *Handler) updateCategory(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Delete a category by ID
+// @Description Delete a single category by its ID
+// @Tags categories
+// @Security BearerAuth
+// @Param id path int true "Category ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /categories/{id} [delete]
 func (h *Handler) deleteCategory(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {

@@ -15,7 +15,9 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func RegisterRoutes(r *gin.Engine, svc *Service) {
+	h := NewHandler(svc)
+
 	authGroup := r.Group("/auth")
 	{
 		authGroup.POST("/register", h.register)
@@ -23,6 +25,17 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	}
 }
 
+// registerReq представляет тело запроса для регистрации пользователя
+// @Summary Register a new user
+// @Description Registers a new user with a username and password
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body registerReq true "User registration info"
+// @Success 201 {string} string "Created"
+// @Failure 400 {object} map[string]string{"error":"<error message>"}
+// @Failure 500 {object} map[string]string{"error":"<error message>"}
+// @Router /auth/register [post]
 type registerReq struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -46,6 +59,17 @@ type loginReq struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// @Summary Login a user
+// @Description Authenticates a user and returns a JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body loginReq true "User login info"
+// @Success 200 {object} map[string]string{"token":"<jwt token>"}
+// @Failure 400 {object} map[string]string{"error":"<error message>"}
+// @Failure 401 {object} map[string]string{"error":"invalid credentials"}
+// @Failure 500 {object} map[string]string{"error":"<error message>"}
+// @Router /auth/login [post]
 func (h *Handler) login(c *gin.Context) {
 	var req loginReq
 	if err := c.ShouldBindJSON(&req); err != nil {

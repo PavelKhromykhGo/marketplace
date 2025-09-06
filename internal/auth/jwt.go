@@ -8,6 +8,10 @@ import (
 
 var jwtSecret = []byte("your-256-bit-secret") // Вынести в ENV
 
+func SetSecret(secret []byte) {
+	jwtSecret = secret
+}
+
 type Claims struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`

@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"os/user"
+	"marketplace/internal/user"
 
 	"github.com/jmoiron/sqlx"
 )
