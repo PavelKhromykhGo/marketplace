@@ -14,16 +14,16 @@ type Health struct {
 // @Description Проверяет, что сервис работает и может отвечать на запросы
 // @Tags Health
 // @Produce json
-// @Success 200 {object} map[string]string{"status":"ok"}
-// @Failure 503 {object} map[string]string{"status":"unhealthy","error":"<error message>"}
+// @Success 200 {object} map[string]string
+// @Failure 503 {object} map[string]string
 // @Router /healthz [get]
 //
 // @Summary Readiness probe
 // @Description Проверяет, что сервис готов принимать трафик
 // @Tags Health
 // @Produce json
-// @Success 200 {object} map[string]string{"status":"ready"}
-// @Failure 503 {object} map[string]string{"status":"unready","error":"<error message>"}
+// @Success 200 {object} map[string]string
+// @Failure 503 {object} map[string]string
 // @Router /readyz [get]
 func (h Health) Register(r *gin.Engine) {
 	r.GET("/healthz", func(c *gin.Context) {

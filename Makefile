@@ -24,6 +24,7 @@ SWAG := $(GOBIN)/swag
 $(SWAG):
 	@echo "Installing swag..."
 	@mkdir -p $(dir $(SWAG))
+	@mkdir -p $(GOTMPDIR)
 	go install github.com/swaggo/swag/cmd/swag@latest
 
 HOST_PWD := $(shell pwd -W 2>/dev/null || pwd)

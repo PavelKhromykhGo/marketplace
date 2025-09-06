@@ -104,12 +104,64 @@ definitions:
     - price
     - stock
     type: object
+  user.loginReq:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
 info:
   contact: {}
-  description: This is a sample server for a marketplace application.
+  description: Type "Bearer" followed by a space and JWT token.
   title: Marketplace API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: User login info
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.loginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - Auth
   /categories:
     get:
       description: Get a list of categories with pagination
@@ -176,10 +228,40 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Create a new category
       tags:
       - categories
   /categories/{id}:
+    delete:
+      description: Delete a single category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a category by ID
+      tags:
+      - categories
     get:
       description: Get a single category by its ID
       parameters:
@@ -243,9 +325,36 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Update an existing category
       tags:
       - categories
+  /healthz:
+    get:
+      description: |-
+        Проверяет, что сервис работает и может отвечать на запросы
+        Проверяет, что сервис готов принимать трафик
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Readiness probe
+      tags:
+      - Health
+      - Health
   /products:
     post:
       consumes:
@@ -277,6 +386,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Create a new product
       tags:
       - products
@@ -304,6 +415,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Delete a product by ID
       tags:
       - products
@@ -342,7 +455,34 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/product.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Update an existing product
       tags:
       - products
+  /readyz:
+    get:
+      description: |-
+        Проверяет, что сервис работает и может отвечать на запросы
+        Проверяет, что сервис готов принимать трафик
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Readiness probe
+      tags:
+      - Health
+      - Health
 swagger: "2.0"

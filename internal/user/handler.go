@@ -33,8 +33,8 @@ func RegisterRoutes(r *gin.Engine, svc *Service) {
 // @Produce json
 // @Param user body registerReq true "User registration info"
 // @Success 201 {string} string "Created"
-// @Failure 400 {object} map[string]string{"error":"<error message>"}
-// @Failure 500 {object} map[string]string{"error":"<error message>"}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Router /auth/register [post]
 type registerReq struct {
 	Username string `json:"username" binding:"required"`
@@ -65,10 +65,10 @@ type loginReq struct {
 // @Accept json
 // @Produce json
 // @Param credentials body loginReq true "User login info"
-// @Success 200 {object} map[string]string{"token":"<jwt token>"}
-// @Failure 400 {object} map[string]string{"error":"<error message>"}
-// @Failure 401 {object} map[string]string{"error":"invalid credentials"}
-// @Failure 500 {object} map[string]string{"error":"<error message>"}
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Router /auth/login [post]
 func (h *Handler) login(c *gin.Context) {
 	var req loginReq
