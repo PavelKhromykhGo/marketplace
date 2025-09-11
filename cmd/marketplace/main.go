@@ -16,6 +16,7 @@ import (
 	"errors"
 	"log"
 	"marketplace/internal/auth"
+	"marketplace/internal/logger"
 	"marketplace/internal/product"
 	"marketplace/internal/repository/postgres"
 	"marketplace/internal/transport"
@@ -100,12 +101,18 @@ func main() {
 	prodService := product.NewService(prodRepo)
 	userService := user.NewService(userRepo)
 
+	logg, err := logger.New(logger.Config{Enviroment: os.Getenv("APP_ENV")})
+	if err != nil {
+		panic(err)
+	}
+	defer logg.Sync()
+
 	r := gin.New()
 
 	r.Use(
-		gin.Recovery(),
 		middleware.RequestID(),
-		middleware.ErrorLogger(),
+		middleware.ZapRecovery(),
+		middleware.ZapLogger(),
 		middleware.ErrorHandler(),
 		middleware.Metrics(),
 	)
