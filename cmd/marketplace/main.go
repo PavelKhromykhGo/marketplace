@@ -34,6 +34,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/pressly/goose/v3"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -106,6 +107,7 @@ func main() {
 		middleware.RequestID(),
 		middleware.ErrorLogger(),
 		middleware.ErrorHandler(),
+		middleware.Metrics(),
 	)
 
 	r.GET("/", func(c *gin.Context) {
@@ -116,6 +118,7 @@ func main() {
 			"ready":   "/readyz",
 		})
 	})
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	transport.Health{DB: db}.Register(r)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
