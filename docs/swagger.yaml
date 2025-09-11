@@ -75,6 +75,26 @@ definitions:
         description: ID of the created or updated entity
         type: integer
     type: object
+  product.Product:
+    properties:
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        description: в копейках
+        type: integer
+      stock:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   product.UpdateCategoryReq:
     properties:
       name:
@@ -356,6 +376,41 @@ paths:
       - Health
       - Health
   /products:
+    get:
+      description: Get a list of products with pagination
+      parameters:
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Name filter
+        in: query
+        name: filter
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/product.Product'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: List products
+      tags:
+      - products
     post:
       consumes:
       - application/json
@@ -418,6 +473,34 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete a product by ID
+      tags:
+      - products
+    get:
+      description: Get a single product by its ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/product.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/product.ErrorResponse'
+      summary: Get a product by ID
       tags:
       - products
     put:

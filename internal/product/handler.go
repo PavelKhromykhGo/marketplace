@@ -82,7 +82,6 @@ func parsePaging(c *gin.Context) (offset, limit int, filter string) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /products [get]
-
 func (h *Handler) listProducts(c *gin.Context) {
 	offset, limit, filter := parsePaging(c)
 
@@ -105,7 +104,6 @@ func (h *Handler) listProducts(c *gin.Context) {
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /products/{id} [get]
-
 func (h *Handler) getProduct(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {
