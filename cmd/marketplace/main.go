@@ -3,7 +3,7 @@
 // @description This is a sample server for a marketplace application.
 // @BasePath /
 
-//securityDefinitions.apikey BearerAuth
+// @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
