@@ -25,7 +25,12 @@ func RegisterRoutes(r *gin.Engine, svc *Service) {
 	}
 }
 
-// registerReq представляет тело запроса для регистрации пользователя
+type registerReq struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// register представляет тело запроса для регистрации пользователя
 // @Summary Register a new user
 // @Description Registers a new user with a username and password
 // @Tags Auth
@@ -36,11 +41,6 @@ func RegisterRoutes(r *gin.Engine, svc *Service) {
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /auth/register [post]
-type registerReq struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func (h *Handler) register(c *gin.Context) {
 	var req registerReq
 	if err := c.ShouldBindJSON(&req); err != nil {
