@@ -16,6 +16,7 @@ import (
 	"errors"
 	"log"
 	"marketplace/internal/auth"
+	"marketplace/internal/cart"
 	"marketplace/internal/logger"
 	"marketplace/internal/product"
 	"marketplace/internal/repository/postgres"
@@ -97,9 +98,11 @@ func main() {
 	// Initialize repositories, services, and handlers here
 	prodRepo := postgres.NewProductRepository(db)
 	userRepo := postgres.NewUserRepository(db)
+	cartRepo := postgres.NewCartRepository(db)
 
 	prodService := product.NewService(prodRepo)
 	userService := user.NewService(userRepo)
+	cartService := cart.NewService(cartRepo)
 
 	logg, err := logger.New(logger.Config{Enviroment: os.Getenv("APP_ENV")})
 	if err != nil {
@@ -132,6 +135,7 @@ func main() {
 
 	product.RegisterRoutes(r, prodService)
 	user.RegisterRoutes(r, userService)
+	cart.RegisterRoutes(r, cartService)
 
 	srv := &http.Server{
 		Addr:              httpAddr,
