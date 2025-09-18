@@ -39,6 +39,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 var embedMigrations embed.FS
@@ -103,6 +104,16 @@ func main() {
 	prodService := product.NewService(prodRepo)
 	userService := user.NewService(userRepo)
 	cartService := cart.NewService(cartRepo)
+
+	if adminUser := os.Getenv("ADMIN_USER"); adminUser != "" {
+		if adminPass := os.Getenv("ADMIN_PASS"); adminPass != "" {
+			if err = userService.EnsureAdmin(context.Background(), adminUser, adminPass); err != nil {
+				zap.L().Error("Failed to ensure admin user", zap.String("username", adminUser), zap.Error(err))
+			} else {
+				zap.L().Info("Admin user ensured", zap.String("username", adminUser))
+			}
+		}
+	}
 
 	logg, err := logger.New(logger.Config{Enviroment: os.Getenv("APP_ENV")})
 	if err != nil {

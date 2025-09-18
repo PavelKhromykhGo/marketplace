@@ -53,3 +53,11 @@ func (r *UserRepo) Delete(ctx context.Context, id int64) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM users WHERE id=$1", id)
 	return err
 }
+
+func (r *UserRepo) UpdateRoleAndPassword(ctx context.Context, id int64, role, passhash string) error {
+	_, err := r.db.ExecContext(ctx, `
+UPDATE users SET role=$1, password_hash=$2, updated_at=now()
+WHERE id=$3
+`, role, passhash, id)
+	return err
+}
