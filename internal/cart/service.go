@@ -11,7 +11,7 @@ type Repository interface {
 
 type Service interface {
 	AddItem(ctx context.Context, userID, productID int64, qty int) (int64, error)
-	ListItem(ctx context.Context, userID int64) ([]*CartItem, error)
+	ListItems(ctx context.Context, userID int64) ([]*CartItem, error)
 	RemoveItem(ctx context.Context, userID, productID int64) error
 	Clear(ctx context.Context, userID int64) error
 }
@@ -33,7 +33,7 @@ func (c *cartService) AddItem(ctx context.Context, userID, productID int64, qty 
 	return c.repo.AddItem(ctx, item)
 }
 
-func (c *cartService) ListItem(ctx context.Context, userID int64) ([]*CartItem, error) {
+func (c *cartService) ListItems(ctx context.Context, userID int64) ([]*CartItem, error) {
 	return c.repo.ListItems(ctx, userID)
 }
 
