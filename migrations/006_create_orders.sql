@@ -2,12 +2,11 @@
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL ,
-    status VARCHAR(50) DEFAULT 'pending',
+    status VARCHAR(50) DEFAULT 'new',
     total_amount BIGINT NOT NULL, --в копейках
-    created_at TIMESTAMPTZ NOT NULL NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE order_items (
