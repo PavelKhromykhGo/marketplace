@@ -91,3 +91,71 @@ func (r *OrderRepo) DecrementStock(ctx context.Context, tx order.Tx, productID i
 	}
 	return nil
 }
+
+func (r *OrderRepo) CreateOrder(ctx context.Context, tx order.Tx, o *order.Order) (int64, error) {
+	xtx := tx.(*txWrap)
+	var id int64
+	err := xtx.QueryRowContext(ctx, `
+		INSERT INTO orders (user_id, status, total_amount, created_at, updated_at)
+		VALUES (:user_id, :status, :total_amount, now(), now())
+		RETURNING id
+	`, o).Scan(&id)
+
+	return id, err
+}
+
+func (r *OrderRepo) BulkInsertItems(ctx context.Context, tx order.Tx, orderID int64, items []order.OrderItem) error {
+	xtx := tx.(*txWrap)
+	q := `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)`
+	for _, item := range items {
+		_, err := xtx.ExecContext(ctx, q, orderID, item.ProductID, item.Quantity, item.Price)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *OrderRepo) ClearCart(ctx context.Context, tx order.Tx, userID int64) error {
+	xtx := tx.(*txWrap)
+	_, err := xtx.ExecContext(ctx, `
+		DELETE FROM cart_items
+		WHERE user_id = $1
+	`, userID)
+	return err
+}
+
+func (r *OrderRepo) GetUserOrders(ctx context.Context, userID int64, offset, limit int) ([]*order.Order, error) {
+	var orders []*order.Order
+	err := r.db.SelectContext(ctx, &orders, `
+		SELECT id, user_id, status, total_amount, created_at, updated_at
+		FROM orders
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		OFFSET $2 LIMIT $3
+	`, userID, offset, limit)
+	return orders, err
+}
+
+func (r *OrderRepo) GetOrderWithItems(ctx context.Context, userID, orderID int64) (*order.Order, error) {
+	var o order.Order
+	err := r.db.GetContext(ctx, &o, `
+		SELECT id, user_id, status, total_amount, created_at, updated_at
+		FROM orders
+		WHERE id = $1 AND user_id = $2
+	`, orderID, userID)
+	if err != nil {
+		return nil, err
+	}
+	var items []order.OrderItem
+	err = r.db.SelectContext(ctx, &items, `
+		SELECT product_id, quantity, price
+		FROM order_items
+		WHERE order_id = $1
+	`, orderID)
+	if err != nil {
+		return nil, err
+	}
+	o.Items = items
+	return &o, nil
+}
