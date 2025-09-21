@@ -18,6 +18,7 @@ import (
 	"marketplace/internal/auth"
 	"marketplace/internal/cart"
 	"marketplace/internal/logger"
+	"marketplace/internal/order"
 	"marketplace/internal/product"
 	"marketplace/internal/repository/postgres"
 	"marketplace/internal/transport"
@@ -100,10 +101,12 @@ func main() {
 	prodRepo := postgres.NewProductRepository(db)
 	userRepo := postgres.NewUserRepository(db)
 	cartRepo := postgres.NewCartRepository(db)
+	ordRepo := postgres.NewOrderRepo(db)
 
 	prodService := product.NewService(prodRepo)
 	userService := user.NewService(userRepo)
 	cartService := cart.NewService(cartRepo)
+	ordService := order.NewService(ordRepo)
 
 	if adminUser := os.Getenv("ADMIN_USER"); adminUser != "" {
 		if adminPass := os.Getenv("ADMIN_PASS"); adminPass != "" {
@@ -147,6 +150,7 @@ func main() {
 	product.RegisterRoutes(r, prodService)
 	user.RegisterRoutes(r, userService)
 	cart.RegisterRoutes(r, cartService)
+	order.RegisterRoutes(r, ordService)
 
 	srv := &http.Server{
 		Addr:              httpAddr,
