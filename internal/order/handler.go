@@ -26,6 +26,19 @@ func RegisterRoutes(r *gin.Engine, svc Service) {
 	}
 }
 
+// @Summary Create Order from Cart
+// @Description Create a new order based on the current user's cart
+// @Tags orders
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param Idempotency-Key header string false "Idempotency Key"
+// @Success 201 {object} map[string]int64 "id"
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 409 {object} map[string]string "idempotency conflict"
+// @Failure 500 {object} map[string]string
+// @Router /orders [post]
 func (h *Handler) createFromCart(c *gin.Context) {
 	id, err := h.svc.CreateFromCart(c, auth.GetUserID(c))
 	if err != nil {
@@ -35,6 +48,16 @@ func (h *Handler) createFromCart(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
+// @Summary List Orders
+// @Description List orders for the current user
+// @Tags orders
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {array} order.Order
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders [get]
 func (h *Handler) listOrders(c *gin.Context) {
 	orders, err := h.svc.ListOrders(c, auth.GetUserID(c), 0, 50)
 	if err != nil {
@@ -44,6 +67,19 @@ func (h *Handler) listOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, orders)
 }
 
+// @Summary Get Order
+// @Description Get details of a specific order by ID
+// @Tags orders
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Order ID"
+// @Success 200 {object} order.Order
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders/{id} [get]
 func (h *Handler) getOrder(c *gin.Context) {
 	oid, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	order, err := h.svc.GetOrder(c, auth.GetUserID(c), oid)

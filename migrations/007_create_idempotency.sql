@@ -3,7 +3,7 @@ CREATE TABLE idempotency_keys (
     key TEXT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     request_hash TEXT NOT NULL,
-    responce_body JSONB,
+    response_body JSONB,
     status_code INT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
