@@ -46,7 +46,7 @@ func (h *Handler) createFromCart(c *gin.Context) {
 	id, err := h.svc.CreateFromCart(c, auth.GetUserID(c), idKey)
 	if err != nil {
 		switch {
-		case errors.Is(err, order.ErrIdempotencyConflict):
+		case errors.Is(err, ErrIdempotencyConflict):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		default:
