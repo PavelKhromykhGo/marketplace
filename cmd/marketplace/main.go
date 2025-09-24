@@ -102,11 +102,12 @@ func main() {
 	userRepo := postgres.NewUserRepository(db)
 	cartRepo := postgres.NewCartRepository(db)
 	ordRepo := postgres.NewOrderRepo(db)
+	idemRepo := postgres.NewIdempotencyRepository(db)
 
 	prodService := product.NewService(prodRepo)
 	userService := user.NewService(userRepo)
 	cartService := cart.NewService(cartRepo)
-	ordService := order.NewService(ordRepo)
+	ordService := order.NewService(ordRepo, idemRepo)
 
 	if adminUser := os.Getenv("ADMIN_USER"); adminUser != "" {
 		if adminPass := os.Getenv("ADMIN_PASS"); adminPass != "" {
