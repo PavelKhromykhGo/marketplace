@@ -1,6 +1,7 @@
 package order
 
 import (
+	"errors"
 	"marketplace/internal/auth"
 	"net/http"
 	"strconv"
@@ -40,10 +41,19 @@ func RegisterRoutes(r *gin.Engine, svc Service) {
 // @Failure 500 {object} map[string]string
 // @Router /orders [post]
 func (h *Handler) createFromCart(c *gin.Context) {
-	id, err := h.svc.CreateFromCart(c, auth.GetUserID(c))
+	idKey := c.GetHeader("Idempotency-Key")
+
+	id, err := h.svc.CreateFromCart(c, auth.GetUserID(c), idKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		switch {
+		case errors.Is(err, order.ErrIdempotencyConflict):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 	}
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }

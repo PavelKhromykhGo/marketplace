@@ -2,8 +2,16 @@ package order
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
+
+var ErrIdempotencyConflict = errors.New("idempotency conflict")
+
+type IdempotencyRepository interface {
+	TryStartIdempotent(ctx context.Context, userID int64, key string, reqHash string) (ok bool, savedStatus int, savedOrderID int64, err error)
+	SaveIdempotentResult(ctx context.Context, key string, reqHash string, status int, orderID int64) error
+}
 
 type Repository interface {
 	BeginTx(ctx context.Context) (Tx, error)
