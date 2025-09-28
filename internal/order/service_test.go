@@ -201,3 +201,47 @@ func TestCreateFromCart_Conflict_WhenKeyBusyWithoutResult(t *testing.T) {
 	idem.AssertExpectations(t)
 	repo.AssertExpectations(t)
 }
+
+func TestCreateFromCart_EmptyCart_Error(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+
+	repo.On("GetCartItemsForUser", ctx, userID).Return([]CartItemLite{}, nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, "")
+	assert.Error(t, err)
+	assert.Equal(t, int64(0), gotID)
+
+	repo.AssertExpectations(t)
+}
+
+func TestCreateFromCart_StockNotEnough_Error(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+	items := []CartItemLite{{ProductID: 10, Quantity: 2}, {ProductID: 20, Quantity: 1}}
+	prices := map[int64]int64{10: 1000, 20: 2000}
+	tx := new(mockTx)
+
+	repo.On("GetCartItemsForUser", ctx, userID).Return(items, nil)
+	repo.On("GetProductsPrices", ctx, []int64{10, 20}).Return(prices, nil)
+	repo.On("BeginTx", ctx).Return(tx, nil)
+
+	repo.On("DecrementStock", ctx, tx, int64(10), 5).Return(errors.New("not enough stock"))
+
+	repo.On("Rollback").Return(nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, "")
+	assert.Error(t, err)
+	assert.Equal(t, int64(0), gotID)
+
+	repo.AssertExpectations(t)
+	tx.AssertExpectations(t)
+}
