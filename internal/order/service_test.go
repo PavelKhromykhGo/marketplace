@@ -2,6 +2,8 @@ package order
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -120,4 +122,82 @@ func TestCreateFromCart_Success_NoIdempotency(t *testing.T) {
 
 	repo.AssertExpectations(t)
 	tx.AssertExpectations(t)
+}
+
+func TestCreateFromCart_Success_WithIdempotency_FirstCall(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+	idemKey := "abc-123"
+
+	items := []CartItemLite{{ProductID: 10, Quantity: 2}, {ProductID: 20, Quantity: 1}}
+	prices := map[int64]int64{10: 1000, 20: 2000}
+	orderID := int64(555)
+
+	tx := new(mockTx)
+
+	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(true, 0, int64(0), nil)
+
+	repo.On("GetCartItemForUser", ctx, userID).Return(items, nil)
+	repo.On("GetProductPrices", ctx, []int64{10, 20}).Return(prices, nil)
+	repo.On("BeginTx", ctx).Return(tx, nil)
+	repo.On("CreateOrder", ctx, tx, mock.MatchedBy(func(o *Order) bool {
+		return o.UserID == userID && o.TotalAmount == 3000
+	})).Return(orderID, nil)
+	repo.On("BulkInsertItems", ctx, tx, orderID, mock.Anything).Return(nil)
+	repo.On("ClearCart", ctx, tx, userID).Return(nil)
+	tx.On("Commit").Return(nil)
+
+	idem.On("SaveIdempotentResult", ctx, idemKey, http.StatusCreated, orderID).Return(nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, idemKey)
+	assert.NoError(t, err)
+	assert.Equal(t, orderID, gotID)
+
+	repo.AssertExpectations(t)
+	idem.AssertExpectations(t)
+	tx.AssertExpectations(t)
+}
+
+func TestCreateFromCart_SecondCall_ReturnsSaved(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+	idemKey := "abc-123"
+	orderID := int64(555)
+
+	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(true, http.StatusCreated, orderID, nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, idemKey)
+	assert.NoError(t, err)
+	assert.Equal(t, orderID, gotID)
+
+	idem.AssertExpectations(t)
+	repo.AssertExpectations(t)
+}
+
+func TestCreateFromCart_Conflict_WhenKeyBusyWithoutResult(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+	idemKey := "abc-123"
+
+	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(false, 0, int64(0), nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, idemKey)
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, ErrIdempotencyConflict))
+	assert.Equal(t, int64(0), gotID)
+
+	idem.AssertExpectations(t)
+	repo.AssertExpectations(t)
 }
