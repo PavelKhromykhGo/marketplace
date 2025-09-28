@@ -104,16 +104,17 @@ func TestCreateFromCart_Success_NoIdempotency(t *testing.T) {
 
 	tx := new(mockTx)
 
-	repo.On("GetCartItemForUser", ctx, userID).Return(items, nil)
-	repo.On("GetProductPrices", ctx, []int64{10, 20}).Return(prices, nil)
+	repo.On("GetCartItemsForUser", ctx, userID).Return(items, nil)
+	repo.On("GetProductsPrices", ctx, []int64{10, 20}).Return(prices, nil)
 	repo.On("BeginTx", ctx).Return(tx, nil)
 	repo.On("DecrementStock", ctx, tx, int64(10), 2).Return(nil)
 	repo.On("DecrementStock", ctx, tx, int64(20), 1).Return(nil)
 	repo.On("CreateOrder", ctx, tx, mock.MatchedBy(func(o *Order) bool {
-		return o.UserID == userID && o.Status == "new" && o.TotalAmount == 3000
+		return o.UserID == userID && o.Status == "new" && o.TotalAmount == 4000
 	})).Return(orderID, nil)
 	repo.On("BulkInsertItems", ctx, tx, orderID, mock.Anything).Return(nil)
 	repo.On("ClearCart", ctx, tx, userID).Return(nil)
+	tx.On("Rollback").Return(nil)
 	tx.On("Commit").Return(nil)
 
 	gotID, err := svc.CreateFromCart(ctx, userID, "")
@@ -141,14 +142,17 @@ func TestCreateFromCart_Success_WithIdempotency_FirstCall(t *testing.T) {
 
 	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(true, 0, int64(0), nil)
 
-	repo.On("GetCartItemForUser", ctx, userID).Return(items, nil)
-	repo.On("GetProductPrices", ctx, []int64{10, 20}).Return(prices, nil)
+	repo.On("GetCartItemsForUser", ctx, userID).Return(items, nil)
+	repo.On("GetProductsPrices", ctx, []int64{10, 20}).Return(prices, nil)
 	repo.On("BeginTx", ctx).Return(tx, nil)
+	repo.On("DecrementStock", ctx, tx, int64(10), 2).Return(nil)
+	repo.On("DecrementStock", ctx, tx, int64(20), 1).Return(nil)
 	repo.On("CreateOrder", ctx, tx, mock.MatchedBy(func(o *Order) bool {
-		return o.UserID == userID && o.TotalAmount == 3000
+		return o.UserID == userID && o.TotalAmount == 4000
 	})).Return(orderID, nil)
 	repo.On("BulkInsertItems", ctx, tx, orderID, mock.Anything).Return(nil)
 	repo.On("ClearCart", ctx, tx, userID).Return(nil)
+	tx.On("Rollback").Return(nil)
 	tx.On("Commit").Return(nil)
 
 	idem.On("SaveIdempotentResult", ctx, idemKey, http.StatusCreated, orderID).Return(nil)
@@ -172,7 +176,7 @@ func TestCreateFromCart_SecondCall_ReturnsSaved(t *testing.T) {
 	idemKey := "abc-123"
 	orderID := int64(555)
 
-	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(true, http.StatusCreated, orderID, nil)
+	idem.On("TryStartIdempotent", ctx, userID, idemKey, mock.AnythingOfType("string")).Return(false, http.StatusCreated, orderID, nil)
 
 	gotID, err := svc.CreateFromCart(ctx, userID, idemKey)
 	assert.NoError(t, err)
@@ -234,9 +238,8 @@ func TestCreateFromCart_StockNotEnough_Error(t *testing.T) {
 	repo.On("GetProductsPrices", ctx, []int64{10, 20}).Return(prices, nil)
 	repo.On("BeginTx", ctx).Return(tx, nil)
 
-	repo.On("DecrementStock", ctx, tx, int64(10), 5).Return(errors.New("not enough stock"))
-
-	repo.On("Rollback").Return(nil)
+	repo.On("DecrementStock", ctx, tx, int64(10), 2).Return(errors.New("not enough stock"))
+	tx.On("Rollback").Return(nil)
 
 	gotID, err := svc.CreateFromCart(ctx, userID, "")
 	assert.Error(t, err)
