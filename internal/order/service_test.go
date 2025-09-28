@@ -2,20 +2,22 @@ package order
 
 import (
 	"context"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-type MockTx struct {
+type mockTx struct {
 	mock.Mock
 }
 
-func (m *MockTx) Commit() error {
+func (m *mockTx) Commit() error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *MockTx) Rollback() error {
+func (m *mockTx) Rollback() error {
 	args := m.Called()
 	return args.Error(0)
 }
@@ -85,4 +87,37 @@ func anyTx() any {
 	return mock.MatchedBy(func(tx Tx) bool {
 		return true
 	})
+}
+
+func TestCreateFromCart_Success_NoIdempotency(t *testing.T) {
+	ctx := context.Background()
+	repo := new(mockRepo)
+	idem := new(mockIdemRepo)
+	svc := NewService(repo, idem)
+
+	userID := int64(1)
+	items := []CartItemLite{{ProductID: 10, Quantity: 2}, {ProductID: 20, Quantity: 1}}
+	prices := map[int64]int64{10: 1000, 20: 2000}
+	orderID := int64(777)
+
+	tx := new(mockTx)
+
+	repo.On("GetCartItemForUser", ctx, userID).Return(items, nil)
+	repo.On("GetProductPrices", ctx, []int64{10, 20}).Return(prices, nil)
+	repo.On("BeginTx", ctx).Return(tx, nil)
+	repo.On("DecrementStock", ctx, tx, int64(10), 2).Return(nil)
+	repo.On("DecrementStock", ctx, tx, int64(20), 1).Return(nil)
+	repo.On("CreateOrder", ctx, tx, mock.MatchedBy(func(o *Order) bool {
+		return o.UserID == userID && o.Status == "new" && o.TotalAmount == 3000
+	})).Return(orderID, nil)
+	repo.On("BulkInsertItems", ctx, tx, orderID, mock.Anything).Return(nil)
+	repo.On("ClearCart", ctx, tx, userID).Return(nil)
+	tx.On("Commit").Return(nil)
+
+	gotID, err := svc.CreateFromCart(ctx, userID, "")
+	assert.NoError(t, err)
+	assert.Equal(t, orderID, gotID)
+
+	repo.AssertExpectations(t)
+	tx.AssertExpectations(t)
 }
