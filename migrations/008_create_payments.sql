@@ -1,7 +1,4 @@
 -- +goose UP
-ALTER TABLE orders
-    ADD COLUMN status VARCHAR(50) NOT NULL Default 'new';
-
 CREATE TABLE payment_intents (
     id SERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
