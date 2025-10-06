@@ -9,14 +9,14 @@ import (
 )
 
 type Handler struct {
-	svc Service
+	svc *Service
 }
 
-func NewHandler(svc Service) *Handler {
+func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func RegisterRoutes(r *gin.Engine, svc Service) {
+func RegisterRoutes(r *gin.Engine, svc *Service) {
 	h := NewHandler(svc)
 	g := r.Group("/payments", auth.JWTAuth())
 	{
