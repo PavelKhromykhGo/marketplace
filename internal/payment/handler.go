@@ -25,6 +25,16 @@ func RegisterRoutes(r *gin.Engine, svc *Service) {
 	}
 }
 
+// @Summary Create Payment Intent
+// @Description Create a payment intent for the specified order
+// @Tags payments
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Sucscess 201 {object} Intent
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Router /orders/{id}/payments [post]
 func (h *Handler) createIntent(c *gin.Context) {
 	oid, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	pi, err := h.svc.CreateIntent(c, auth.GetUserID(c), oid)
@@ -35,6 +45,17 @@ func (h *Handler) createIntent(c *gin.Context) {
 	c.JSON(http.StatusCreated, pi)
 }
 
+// @Summary Confirm Payment Intent
+// @Description Confirm the payment intent for the specified order using the client secret
+// @Tags payments
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param client_secret body map[string]string true "client Secret"
+// @Sucscess 200 {object} Intent
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Router /orders/{id}/payments/confirm [post]
 func (h *Handler) confirmIntent(c *gin.Context) {
 	oid, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	var body struct {
