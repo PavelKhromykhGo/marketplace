@@ -22,6 +22,8 @@ type Repository interface {
 	ClearCart(ctx context.Context, tx Tx, userID int64) error
 	GetUserOrders(ctx context.Context, userID int64, offset, limit int) ([]*Order, error)
 	GetOrderWithItems(ctx context.Context, userID, orderID int64) (*Order, error)
+	GetOrderStatus(ctx context.Context, orderID int64) (string, error)
+	UpdateOrderStatus(ctx context.Context, orderID int64, from, to string) error
 }
 
 type Tx interface {

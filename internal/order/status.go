@@ -5,7 +5,7 @@ const (
 	StatusAwaitingPayment = "awaiting_payment"
 	StatusPaid            = "paid"
 	StatusShipped         = "shipped"
-	StatusCompleted       = "completed"
+	StatusDelivered       = "delivered"
 	StatusCancelled       = "cancelled"
 )
 
@@ -23,7 +23,7 @@ var allowedStatusTransitions = map[string]map[string]struct{}{
 		StatusCancelled: {},
 	},
 	StatusShipped: {
-		StatusCompleted: {},
+		StatusDelivered: {},
 	},
 }
 
