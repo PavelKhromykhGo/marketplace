@@ -159,3 +159,31 @@ func (r *OrderRepo) GetOrderWithItems(ctx context.Context, userID, orderID int64
 	o.Items = items
 	return &o, nil
 }
+
+func (r *OrderRepo) GetOrderStatus(ctx context.Context, orderID int64) (string, error) {
+	var status string
+	if err := r.db.GetContext(ctx, &status, `
+		SELECT status
+		FROM orders
+		WHERE id = $1
+	`, orderID); err != nil {
+		return "", err
+	}
+	return status, nil
+}
+
+func (r *OrderRepo) UpdateOrderStatus(ctx context.Context, orderID int64, from, to string) error {
+	result, err := r.db.ExecContext(ctx, `
+		UPDATE orders
+		SET status = $1, updated_at = NOW()
+		WHERE id = $2 AND status = $3
+	`, to, orderID, from)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
