@@ -72,6 +72,16 @@ func (m *mockRepo) GetOrderWithItems(ctx context.Context, userID, orderID int64)
 	return args.Get(0).(*Order), args.Error(1)
 }
 
+func (m *mockRepo) GetOrderStatus(ctx context.Context, orderID int64) (string, error) {
+	args := m.Called(ctx, orderID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *mockRepo) UpdateOrderStatus(ctx context.Context, orderID int64, from, to string) error {
+	args := m.Called(ctx, orderID, from, to)
+	return args.Error(0)
+}
+
 type mockIdemRepo struct {
 	mock.Mock
 }
